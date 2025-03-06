@@ -1,0 +1,281 @@
+/* 
+ * Brian Eno's "2/1" Web Recreation
+ * Main Stylesheet
+ * Inspired by Dieter Rams' functionalist approach
+ */
+
+/* Base Styles */
+:root {
+    --bg-color: #ffffff;
+    --text-color: #000000;
+    --accent-color: #000000;
+    --border-color: #e0e0e0;
+    
+    /* Voice colors - all black now */
+    --voice1-color: #000000; /* High A♭ */
+    --voice2-color: #000000; /* C */
+    --voice3-color: #000000; /* D♭ */
+    --voice4-color: #000000; /* High F */
+    --voice5-color: #000000; /* E♭ */
+    --voice6-color: #000000; /* Low A♭ */
+    --voice7-color: #000000; /* Low F */
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Helvetica Neue', Arial, sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-color);
+    line-height: 1.6;
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    width: 100%;
+    max-width: 1000px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    flex: 1;
+    box-sizing: border-box;
+}
+
+/* Typography */
+h1 {
+    font-size: 2.2rem;
+    font-weight: 200;
+    margin-bottom: 0.3rem; /* Reduced margin */
+    text-align: center;
+    letter-spacing: 1px;
+}
+
+.subtitle {
+    font-size: 1rem;
+    color: var(--accent-color);
+    margin-bottom: 1rem; /* Further reduced space between subtitle and canvas */
+    text-align: center;
+    font-weight: 300;
+    letter-spacing: 0.5px;
+}
+
+/* Layout */
+header {
+    width: 100%;
+    padding: 15px 0 5px; /* Reduced bottom padding */
+    text-align: center;
+}
+
+footer {
+    width: 100%;
+    padding: 20px 0;
+    text-align: center;
+}
+
+main {
+    flex: 1;
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Visualization */
+.visualization-container {
+    width: 100%;
+    max-width: min(700px, 90vw); /* Use the smaller of 700px or 90% of viewport width */
+    position: relative;
+    margin: 0 auto 20px;
+    aspect-ratio: 1 / 1; /* Maintain square aspect ratio */
+}
+
+#visualization {
+    width: 100%;
+    height: 100%;
+    display: block;
+    background-color: var(--bg-color);
+    border-radius: 4px;
+    box-sizing: border-box; /* Ensure padding doesn't affect dimensions */
+}
+
+/* Controls */
+.controls {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 0 auto 40px;
+    position: relative;
+    gap: 20px; /* Spacing between buttons */
+    width: 100%;
+    max-width: min(800px, 90vw); /* Match visualization container width */
+}
+
+.play-pause-btn, .regenerate-btn {
+    width: 48px;
+    height: 48px;
+    border-radius: 50%;
+    background-color: white;
+    color: black;
+    border: 1px solid black;
+    cursor: pointer;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 1.1rem;
+    transition: all 0.2s ease;
+    outline: none;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    position: relative;
+}
+
+.play-pause-btn:hover, .regenerate-btn:hover {
+    background-color: #f8f8f8;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+.play-pause-btn:active, .regenerate-btn:active,
+.play-pause-btn.active, .regenerate-btn.active {
+    transform: scale(0.97);
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+    background-color: #f0f0f0;
+}
+
+.play-icon, .pause-icon {
+    position: absolute;
+    transition: opacity 0.3s;
+    font-family: monospace; /* Better rendering for symbols */
+    font-weight: bold;
+}
+
+.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+.loading {
+    font-size: 0.9rem;
+    color: black;
+    letter-spacing: 0.5px;
+    font-weight: 300;
+    position: absolute;
+    bottom: -30px;
+    left: 50%;
+    transform: translateX(-50%);
+    white-space: nowrap;
+}
+
+/* Footer */
+footer {
+    margin-top: auto;
+    font-size: 0.8rem;
+    color: var(--accent-color);
+    padding: 30px 0;
+    letter-spacing: 0.5px;
+}
+
+footer a {
+    color: inherit;
+    text-decoration: none;
+    border-bottom: 1px solid transparent;
+    transition: border-color 0.2s ease;
+    padding-bottom: 1px;
+}
+
+footer a:hover {
+    border-bottom-color: var(--accent-color);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+    body {
+        padding: 15px;
+    }
+    
+    h1 {
+        font-size: 1.8rem;
+        margin-bottom: 0.3rem;
+    }
+    
+    .subtitle {
+        font-size: 0.9rem;
+        margin-bottom: 1.2rem;
+    }
+    
+    .visualization-container {
+        margin-bottom: 15px;
+    }
+    
+    .controls {
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .play-pause-btn, .regenerate-btn {
+        width: 42px;
+        height: 42px;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+    
+    h1 {
+        font-size: 1.5rem;
+        margin-bottom: 0.2rem;
+    }
+    
+    .subtitle {
+        font-size: 0.8rem;
+        margin-bottom: 1rem;
+    }
+    
+    .visualization-container {
+        margin-bottom: 10px;
+        max-width: 95vw; /* Use almost full viewport width on small screens */
+    }
+    
+    .controls {
+        gap: 12px;
+        margin-bottom: 25px;
+        max-width: 95vw;
+    }
+    
+    .play-pause-btn, .regenerate-btn {
+        width: 38px;
+        height: 38px;
+        font-size: 1rem;
+    }
+    
+    .loading {
+        font-size: 0.8rem;
+        bottom: -25px;
+    }
+}
+
+/* Fix for very small screens */
+@media (max-width: 350px) {
+    h1 {
+        font-size: 1.3rem;
+    }
+    
+    .subtitle {
+        font-size: 0.7rem;
+        margin-bottom: 0.8rem;
+    }
+    
+    .play-pause-btn, .regenerate-btn {
+        width: 36px;
+        height: 36px;
+    }
+}

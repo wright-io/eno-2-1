@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brian Eno's "2/1" from Music for Airports</title>
+    <link rel="stylesheet" href="styles/main.css">
+    <meta name="description" content="A web recreation of Brian Eno's '2/1' from Music for Airports">
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>An Approximation of Brian Eno's "2/1"</h1>
+            <p class="subtitle">from Music for Airports (1978)</p>
+        </header>
+        
+        <main>
+            <div class="visualization-container">
+                <canvas id="visualization"></canvas>
+            </div>
+            
+            <div class="controls">
+                <button id="playPauseButton" class="play-pause-btn">
+                    <span class="play-icon">►</span>
+                    <span class="pause-icon hidden">||</span>
+                </button>
+                <button id="regenerateButton" class="regenerate-btn" title="Generate new random arrangement">
+                    ↻
+                </button>
+                <div id="loading" class="loading hidden">Loading audio...</div>
+            </div>
+        </main>
+        
+    </div>
+
+    <!-- Scripts -->
+    <script src="scripts/audio-engine.js"></script>
+    <script src="scripts/visualization.js"></script>
+    <script src="scripts/ui-controls.js"></script>
+    <script src="scripts/main.js"></script>
+</body>
+</html>
