@@ -1,6 +1,6 @@
 # Brian Eno's "2/1" Web Recreation
 
-**NOTE:** This entire project was created using [Roo Code](https://github.com/RooVetGit/Roo-Code) with me acting mostly as artistic director and doing almost zero coding. The work is derivative: of course the composition closely follows Eno's masterpiece, and the orbit visualization is inspired by a beautiful explanation of the Eno piece that I saw online before, but can no longer find.
+*__NOTE:__ This entire project was created using [Roo Code](https://github.com/RooVetGit/Roo-Code) with me acting mostly as artistic director and doing almost zero coding. The work is derivative: of course the composition closely follows Eno's masterpiece, and the orbit visualization is inspired by a beautiful explanation of the Eno piece that I saw online before, but can no longer find.*
 
 A minimal web application that recreates Brian Eno's piece "2/1" from Music for Airports (1978) with accurate musical timing and a visual representation of the looping voices.
 
