@@ -15,6 +15,9 @@ class UIControls {
         // State
         this.isLoaded = false;
         this.silentAudio = null;
+        this.silentAudioInterval = null;
+        this.heartbeatOscillator = null;
+        this.heartbeatInterval = null;
         
         // Bind methods
         this.handlePlayPauseClick = this.handlePlayPauseClick.bind(this);
@@ -80,21 +83,146 @@ class UIControls {
         
         // Create a silent audio element
         this.silentAudio = new Audio('assets/silent-1s.mp3');
+        
+        // Critical iOS-specific settings
         this.silentAudio.loop = true;
+        this.silentAudio.autoplay = false; // Don't autoplay until user interaction
+        this.silentAudio.controls = false;
+        this.silentAudio.muted = false; // Important: don't mute or iOS won't consider it "playing audio"
+        this.silentAudio.volume = 0.1; // Low but not zero volume
         
         // Set attributes for better mobile behavior
         this.silentAudio.setAttribute('playsinline', '');
         this.silentAudio.setAttribute('webkit-playsinline', '');
+        this.silentAudio.setAttribute('x-webkit-airplay', 'allow');
+        
+        // Add iOS-specific attributes
+        if (this.isIOS()) {
+            console.log('iOS device detected, adding specific attributes');
+            // These attributes help signal to iOS that audio should continue in background
+            this.silentAudio.setAttribute('data-audio-keep-alive', 'true');
+        }
         
         // Preload the audio
         this.silentAudio.preload = 'auto';
         
+        // Add event listeners for debugging and handling iOS behavior
+        this.silentAudio.addEventListener('play', () => console.log('Silent audio started playing'));
+        this.silentAudio.addEventListener('pause', () => console.log('Silent audio paused'));
+        this.silentAudio.addEventListener('ended', () => {
+            console.log('Silent audio ended - this should not happen with loop=true');
+            // Try to restart if it somehow ends
+            if (audioEngine.isPlaying) {
+                console.log('Restarting silent audio');
+                this.silentAudio.play().catch(e => console.warn('Failed to restart silent audio:', e));
+            }
+        });
+        
         // Add error handling
         this.silentAudio.onerror = (e) => {
-            console.error('Error loading silent audio:', e);
+            console.error('Error with silent audio:', e);
+            // Try to recreate the audio element if there's an error
+            setTimeout(() => this.initSilentAudio(), 1000);
         };
         
-        console.log('Silent audio element initialized');
+        // Add page visibility change listener to handle app going to background
+        document.addEventListener('visibilitychange', () => {
+            if (document.visibilityState === 'hidden' && audioEngine.isPlaying) {
+                console.log('Page hidden, ensuring silent audio is playing');
+                // Make sure silent audio is playing when page goes to background
+                this.silentAudio.play().catch(e => console.warn('Could not play silent audio on visibility change:', e));
+                
+                // Also create an audio context heartbeat when the page is hidden
+                if (this.isIOS()) {
+                    this.createAudioContextHeartbeat();
+                }
+            }
+        });
+        
+        console.log('Silent audio element initialized with enhanced iOS support');
+    }
+    
+    /**
+     * Create a continuous audio context heartbeat to prevent iOS from suspending the audio context
+     * This creates a very quiet oscillator that plays continuously to keep the audio context active
+     */
+    createAudioContextHeartbeat() {
+        if (!audioEngine.audioContext || !audioEngine.isPlaying) return;
+        
+        console.log('Creating audio context heartbeat for iOS background playback');
+        
+        // Create a very quiet oscillator
+        const oscillator = audioEngine.audioContext.createOscillator();
+        const gainNode = audioEngine.audioContext.createGain();
+        
+        // Set extremely low gain (volume) so it's practically inaudible
+        gainNode.gain.value = 0.001;
+        
+        // Set a very low frequency
+        oscillator.frequency.value = 1; // 1 Hz, barely audible
+        
+        // Connect the oscillator to the gain node and then to the destination
+        oscillator.connect(gainNode);
+        gainNode.connect(audioEngine.audioContext.destination);
+        
+        // Start the oscillator
+        oscillator.start();
+        
+        console.log('Audio context heartbeat created and started');
+        
+        // Store the oscillator so we can stop it later if needed
+        this.heartbeatOscillator = oscillator;
+        
+        // Schedule periodic oscillator restarts to ensure continuous audio
+        if (this.heartbeatInterval) {
+            clearInterval(this.heartbeatInterval);
+        }
+        
+        this.heartbeatInterval = setInterval(() => {
+            if (audioEngine.isPlaying && document.visibilityState === 'hidden') {
+                // Stop the old oscillator
+                if (this.heartbeatOscillator) {
+                    this.heartbeatOscillator.stop();
+                }
+                
+                // Create a new oscillator
+                const newOscillator = audioEngine.audioContext.createOscillator();
+                newOscillator.frequency.value = 1;
+                newOscillator.connect(gainNode);
+                newOscillator.start();
+                
+                // Update the reference
+                this.heartbeatOscillator = newOscillator;
+                
+                console.log('Audio context heartbeat refreshed');
+            } else if (!audioEngine.isPlaying && this.heartbeatInterval) {
+                // Stop the heartbeat if playback has stopped
+                clearInterval(this.heartbeatInterval);
+                this.heartbeatInterval = null;
+                
+                if (this.heartbeatOscillator) {
+                    this.heartbeatOscillator.stop();
+                    this.heartbeatOscillator = null;
+                }
+            }
+        }, 10000); // Refresh every 10 seconds
+    }
+    
+    /**
+     * Detect if the current device is running iOS
+     * @returns {boolean} True if the device is running iOS
+     */
+    isIOS() {
+        return [
+            'iPad Simulator',
+            'iPhone Simulator',
+            'iPod Simulator',
+            'iPad',
+            'iPhone',
+            'iPod'
+        ].includes(navigator.platform) ||
+        // iPad on iOS 13+ detection
+        (navigator.userAgent.includes("Mac") && "ontouchend" in document);
     }
     
     /**
@@ -183,12 +311,38 @@ class UIControls {
             // Play silent audio to keep iOS audio session alive
             if (this.silentAudio) {
                 console.log('Playing silent audio for iOS background playback');
-                // Use promise to handle autoplay restrictions
-                this.silentAudio.play().catch(error => {
-                    console.warn('Could not play silent audio:', error);
-                    // If autoplay is blocked, we'll need user interaction
-                    // This is handled by our existing click handlers
+                
+                // Ensure audio context is resumed first
+                audioEngine.audioContext.resume().then(() => {
+                    // Use promise to handle autoplay restrictions
+                    this.silentAudio.play().catch(error => {
+                        console.warn('Could not play silent audio:', error);
+                        
+                        // If autoplay is blocked, show a message to the user
+                        if (this.isIOS()) {
+                            this.showTemporaryMessage('Tap again for background audio support', 3000);
+                        }
+                    });
                 });
+                
+                // Set up a periodic check to ensure silent audio keeps playing
+                // This helps with iOS potentially stopping the audio after some time
+                if (this.silentAudioInterval) {
+                    clearInterval(this.silentAudioInterval);
+                }
+                
+                this.silentAudioInterval = setInterval(() => {
+                    if (audioEngine.isPlaying && this.silentAudio.paused) {
+                        console.log('Silent audio stopped unexpectedly, restarting');
+                        this.silentAudio.play().catch(e => console.warn('Failed to restart silent audio:', e));
+                    }
+                }, 5000); // Check every 5 seconds
+                
+                // For iOS devices, also create an audio context heartbeat
+                if (this.isIOS()) {
+                    console.log('iOS device detected, creating audio context heartbeat');
+                    this.createAudioContextHeartbeat();
+                }
             }
         } else {
             console.log('Stopping visualization animation');
@@ -198,6 +352,23 @@ class UIControls {
             if (this.silentAudio) {
                 console.log('Pausing silent audio');
                 this.silentAudio.pause();
+                
+                // Clear the interval when paused
+                if (this.silentAudioInterval) {
+                    clearInterval(this.silentAudioInterval);
+                    this.silentAudioInterval = null;
+                }
+                
+                // Stop the audio context heartbeat
+                if (this.heartbeatInterval) {
+                    clearInterval(this.heartbeatInterval);
+                    this.heartbeatInterval = null;
+                }
+                
+                if (this.heartbeatOscillator) {
+                    this.heartbeatOscillator.stop();
+                    this.heartbeatOscillator = null;
+                }
             }
         }
     }
