@@ -14,6 +14,7 @@ class UIControls {
         
         // State
         this.isLoaded = false;
+        this.silentAudio = null;
         
         // Bind methods
         this.handlePlayPauseClick = this.handlePlayPauseClick.bind(this);
@@ -24,6 +25,7 @@ class UIControls {
         this.handleKeyDown = this.handleKeyDown.bind(this);
         this.setupMediaSession = this.setupMediaSession.bind(this);
         this.updateMediaSessionState = this.updateMediaSessionState.bind(this);
+        this.initSilentAudio = this.initSilentAudio.bind(this);
         
         // Initialize
         this.init();
@@ -58,11 +60,41 @@ class UIControls {
         // Set up MediaSession API for background playback
         this.setupMediaSession();
         
+        // Initialize silent audio for iOS background playback
+        this.initSilentAudio();
+        
         // Initialize audio engine
         audioEngine.init().catch(error => {
             console.error('Failed to initialize audio engine:', error);
             this.showError('Failed to initialize audio. Please try refreshing the page.');
         });
+    }
+    
+    /**
+     * Initialize silent audio element for iOS background playback
+     * This creates a silent, looping audio element that keeps the audio session alive
+     * when the screen is locked on iOS devices
+     */
+    initSilentAudio() {
+        console.log('Initializing silent audio element for iOS background playback');
+        
+        // Create a silent audio element
+        this.silentAudio = new Audio('assets/silent-1s.mp3');
+        this.silentAudio.loop = true;
+        
+        // Set attributes for better mobile behavior
+        this.silentAudio.setAttribute('playsinline', '');
+        this.silentAudio.setAttribute('webkit-playsinline', '');
+        
+        // Preload the audio
+        this.silentAudio.preload = 'auto';
+        
+        // Add error handling
+        this.silentAudio.onerror = (e) => {
+            console.error('Error loading silent audio:', e);
+        };
+        
+        console.log('Silent audio element initialized');
     }
     
     /**
@@ -79,7 +111,7 @@ class UIControls {
                 artist: 'Music for Airports (1978)',
                 album: 'Ambient 1: Music for Airports',
                 artwork: [
-                    { src: '/favicon.ico', sizes: '16x16', type: 'image/x-icon' }
+                    { src: 'favicon.ico', sizes: '16x16', type: 'image/x-icon' }
                 ]
             });
             
@@ -143,13 +175,30 @@ class UIControls {
         audioEngine.togglePlayPause();
         console.log('Audio playback toggled, isPlaying:', audioEngine.isPlaying);
         
-        // Start or stop visualization animation
+        // Start or stop visualization animation and silent audio
         if (audioEngine.isPlaying) {
             console.log('Starting visualization animation');
             visualization.startAnimation();
+            
+            // Play silent audio to keep iOS audio session alive
+            if (this.silentAudio) {
+                console.log('Playing silent audio for iOS background playback');
+                // Use promise to handle autoplay restrictions
+                this.silentAudio.play().catch(error => {
+                    console.warn('Could not play silent audio:', error);
+                    // If autoplay is blocked, we'll need user interaction
+                    // This is handled by our existing click handlers
+                });
+            }
         } else {
             console.log('Stopping visualization animation');
             visualization.stopAnimation();
+            
+            // Pause silent audio
+            if (this.silentAudio) {
+                console.log('Pausing silent audio');
+                this.silentAudio.pause();
+            }
         }
     }
     
@@ -165,6 +214,12 @@ class UIControls {
         if (wasPlaying) {
             audioEngine.pause();
             visualization.stopAnimation();
+            
+            // Pause silent audio
+            if (this.silentAudio) {
+                console.log('Pausing silent audio during regeneration');
+                this.silentAudio.pause();
+            }
         }
         
         // Generate new random offsets (force regeneration)
@@ -187,6 +242,14 @@ class UIControls {
             setTimeout(() => {
                 audioEngine.play();
                 visualization.startAnimation();
+                
+                // Resume silent audio
+                if (this.silentAudio) {
+                    console.log('Resuming silent audio after regeneration');
+                    this.silentAudio.play().catch(error => {
+                        console.warn('Could not resume silent audio:', error);
+                    });
+                }
             }, 100);
         }
     }
