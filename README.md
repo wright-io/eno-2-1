@@ -162,6 +162,12 @@ This application works best in modern browsers that support the Web Audio API, i
 - Safari 6+
 - Edge 12+
 
+### Mobile Device Support
+
+The application includes special handling for mobile devices:
+
+- **Screen Lock Prevention**: The app uses NoSleep.js to prevent the screen from locking on mobile devices, allowing the music to continue playing even when the screen would normally turn off. This is particularly important for iOS devices, which would otherwise stop audio playback when the screen locks.
+
 ## Debugging
 
 If you encounter issues with audio playback or visualization, you can use the following test files to isolate and debug problems:

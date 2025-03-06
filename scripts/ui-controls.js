@@ -15,6 +15,9 @@ class UIControls {
         // State
         this.isLoaded = false;
         
+        // Create NoSleep instance to prevent screen from locking on mobile devices
+        this.noSleep = new NoSleep();
+        
         // Bind methods
         this.handlePlayPauseClick = this.handlePlayPauseClick.bind(this);
         this.handleRegenerateClick = this.handleRegenerateClick.bind(this);
@@ -89,9 +92,17 @@ class UIControls {
         if (audioEngine.isPlaying) {
             console.log('Starting visualization animation');
             visualization.startAnimation();
+            
+            // Enable NoSleep to prevent screen from locking (especially on iOS)
+            this.noSleep.enable();
+            console.log('NoSleep enabled to prevent screen locking');
         } else {
             console.log('Stopping visualization animation');
             visualization.stopAnimation();
+            
+            // Disable NoSleep when paused to save battery
+            this.noSleep.disable();
+            console.log('NoSleep disabled');
         }
     }
     
@@ -105,6 +116,9 @@ class UIControls {
         // If currently playing, pause first
         const wasPlaying = audioEngine.isPlaying;
         if (wasPlaying) {
+            // Temporarily disable NoSleep during regeneration
+            this.noSleep.disable();
+            
             audioEngine.pause();
             visualization.stopAnimation();
         }
@@ -129,6 +143,10 @@ class UIControls {
             setTimeout(() => {
                 audioEngine.play();
                 visualization.startAnimation();
+                
+                // Re-enable NoSleep if we were playing before
+                this.noSleep.enable();
+                console.log('NoSleep re-enabled after regeneration');
             }, 100);
         }
     }
