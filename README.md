@@ -50,6 +50,36 @@ To run the application locally:
    http://localhost:8000
    ```
 
+## Running Tests
+
+This project includes both unit tests and interactive component tests:
+
+### Unit Tests
+
+To run the automated unit tests:
+
+1. Start a local server as described above
+2. Open your browser and navigate to:
+   ```
+   http://localhost:8000/tests/run-unit-tests.html
+   ```
+3. Click the "Run Audio Engine Tests" or "Run Visualization Tests" buttons to execute the tests
+4. Test results will be displayed in the corresponding output area
+
+You can also run the tests directly from the GitHub Pages deployment:
+```
+https://wright-io.github.io/eno-2-1/tests/run-unit-tests.html
+```
+
+### Interactive Component Tests
+
+For manual testing of individual components:
+
+1. Audio Test: `http://localhost:8000/tests/audio-test.html`
+2. Visualization Test: `http://localhost:8000/tests/visualization-test.html`
+
+These interactive tests allow you to manually verify the behavior of each component in isolation.
+
 ## Deployment
 
 ### Live Demo
