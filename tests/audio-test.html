@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audio Engine Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow: auto;
+            max-height: 400px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Audio Engine Test</h1>
+    
+    <div>
+        <button id="initButton">Initialize Audio</button>
+        <button id="playButton" disabled>Play</button>
+        <button id="pauseButton" disabled>Pause</button>
+        <button id="testToneButton" disabled>Play Test Tone</button>
+    </div>
+    
+    <h2>Audio Context State: <span id="contextState">Not initialized</span></h2>
+    
+    <h2>Log:</h2>
+    <pre id="log"></pre>
+    
+    <script>
+        // Simple logging function
+        function log(message) {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.textContent = `[${timestamp}] ${message}\n` + logElement.textContent;
+        }
+        
+        // Audio context and nodes
+        let audioContext = null;
+        let masterGain = null;
+        let isPlaying = false;
+        
+        // Initialize button
+        document.getElementById('initButton').addEventListener('click', async () => {
+            try {
+                log('Initializing audio context...');
+                audioContext = new (window.AudioContext || window.webkitAudioContext)();
+                
+                // Update state display
+                document.getElementById('contextState').textContent = audioContext.state;
+                
+                // Create master gain
+                masterGain = audioContext.createGain();
+                masterGain.gain.value = 0.7;
+                masterGain.connect(audioContext.destination);
+                
+                log('Audio context initialized successfully');
+                log(`Audio context state: ${audioContext.state}`);
+                
+                // Enable buttons
+                document.getElementById('playButton').disabled = false;
+                document.getElementById('pauseButton').disabled = false;
+                document.getElementById('testToneButton').disabled = false;
+                
+                // Monitor state changes
+                audioContext.addEventListener('statechange', () => {
+                    log(`Audio context state changed to: ${audioContext.state}`);
+                    document.getElementById('contextState').textContent = audioContext.state;
+                });
+            } catch (error) {
+                log(`Error initializing audio context: ${error.message}`);
+            }
+        });
+        
+        // Play button
+        document.getElementById('playButton').addEventListener('click', async () => {
+            if (!audioContext) return;
+            
+            try {
+                log('Play button clicked');
+                
+                if (audioContext.state === 'suspended') {
+                    log('Audio context is suspended, attempting to resume...');
+                    await audioContext.resume();
+                    log(`Audio context resumed, new state: ${audioContext.state}`);
+                }
+                
+                // Create oscillator for each note
+                const notes = [
+                    { name: "High A♭", frequency: 830.61 },
+                    { name: "C", frequency: 523.25 },
+                    { name: "D♭", frequency: 554.37 },
+                    { name: "High F", frequency: 698.46 },
+                    { name: "E♭", frequency: 622.25 },
+                    { name: "Low A♭", frequency: 415.30 },
+                    { name: "Low F", frequency: 349.23 }
+                ];
+                
+                log(`Playing ${notes.length} notes...`);
+                
+                notes.forEach((note, index) => {
+                    // Schedule note to play with a slight delay between each
+                    const startTime = audioContext.currentTime + (index * 0.5);
+                    
+                    // Create oscillator
+                    const oscillator = audioContext.createOscillator();
+                    oscillator.type = 'sine';
+                    oscillator.frequency.value = note.frequency;
+                    
+                    // Create gain node for envelope
+                    const gainNode = audioContext.createGain();
+                    gainNode.gain.value = 0;
+                    
+                    // Connect nodes
+                    oscillator.connect(gainNode);
+                    gainNode.connect(masterGain);
+                    
+                    // Schedule envelope
+                    gainNode.gain.setValueAtTime(0, startTime);
+                    gainNode.gain.linearRampToValueAtTime(0.5, startTime + 0.1);
+                    gainNode.gain.linearRampToValueAtTime(0, startTime + 2.0);
+                    
+                    // Start and stop oscillator
+                    oscillator.start(startTime);
+                    oscillator.stop(startTime + 2.0);
+                    
+                    log(`Scheduled note ${note.name} (${note.frequency} Hz) at time ${startTime.toFixed(2)}`);
+                });
+                
+                isPlaying = true;
+            } catch (error) {
+                log(`Error playing notes: ${error.message}`);
+            }
+        });
+        
+        // Pause button
+        document.getElementById('pauseButton').addEventListener('click', () => {
+            if (!audioContext) return;
+            
+            try {
+                log('Pause button clicked');
+                
+                if (audioContext.state === 'running') {
+                    log('Suspending audio context...');
+                    audioContext.suspend().then(() => {
+                        log(`Audio context suspended, new state: ${audioContext.state}`);
+                    });
+                }
+                
+                isPlaying = false;
+            } catch (error) {
+                log(`Error pausing audio: ${error.message}`);
+            }
+        });
+        
+        // Test tone button
+        document.getElementById('testToneButton').addEventListener('click', () => {
+            if (!audioContext) return;
+            
+            try {
+                log('Playing test tone...');
+                
+                // Resume context if needed
+                if (audioContext.state === 'suspended') {
+                    log('Audio context is suspended, attempting to resume...');
+                    audioContext.resume().then(() => {
+                        log(`Audio context resumed, new state: ${audioContext.state}`);
+                    });
+                }
+                
+                // Create oscillator
+                const oscillator = audioContext.createOscillator();
+                oscillator.type = 'sine';
+                oscillator.frequency.value = 440; // A4
+                
+                // Create gain node for envelope
+                const gainNode = audioContext.createGain();
+                gainNode.gain.value = 0;
+                
+                // Connect nodes
+                oscillator.connect(gainNode);
+                gainNode.connect(masterGain);
+                
+                // Schedule envelope
+                const startTime = audioContext.currentTime;
+                gainNode.gain.setValueAtTime(0, startTime);
+                gainNode.gain.linearRampToValueAtTime(0.5, startTime + 0.1);
+                gainNode.gain.linearRampToValueAtTime(0, startTime + 1.0);
+                
+                // Start and stop oscillator
+                oscillator.start(startTime);
+                oscillator.stop(startTime + 1.0);
+                
+                log(`Test tone (440 Hz) scheduled at time ${startTime.toFixed(2)}`);
+            } catch (error) {
+                log(`Error playing test tone: ${error.message}`);
+            }
+        });
+        
+        // Initial log
+        log('Audio test page loaded. Click "Initialize Audio" to begin.');
+    </script>
+</body>
+</html>

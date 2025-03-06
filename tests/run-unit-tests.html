@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brian Eno's "2/1" Unit Tests</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        h2 {
+            margin-top: 0;
+        }
+        .test-output {
+            background-color: #f5f5f5;
+            padding: 15px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre;
+            overflow: auto;
+            max-height: 300px;
+        }
+        .run-button {
+            display: block;
+            margin: 10px 0;
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        .run-button:hover {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <h1>Brian Eno's "2/1" Unit Tests</h1>
+    
+    <div class="test-section">
+        <h2>Audio Engine Tests</h2>
+        <button id="runAudioTests" class="run-button">Run Audio Engine Tests</button>
+        <div id="audioTestOutput" class="test-output">Click the button above to run tests...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Visualization Tests</h2>
+        <button id="runVisualizationTests" class="run-button">Run Visualization Tests</button>
+        <div id="visualizationTestOutput" class="test-output">Click the button above to run tests...</div>
+    </div>
+    
+    <div class="test-section">
+        <h2>Interactive Tests</h2>
+        <p>For interactive testing of components:</p>
+        <ul>
+            <li><a href="audio-test.html" target="_blank">Audio Test Page</a> - Test audio playback and scheduling</li>
+            <li><a href="visualization-test.html" target="_blank">Visualization Test Page</a> - Test animation and rendering</li>
+        </ul>
+    </div>
+
+    <!-- Load the main scripts -->
+    <script src="../scripts/audio-engine.js"></script>
+    <script src="../scripts/visualization.js"></script>
+    
+    <!-- Custom test runner -->
+    <script>
+        // Redirect console output to the test output divs
+        function setupConsoleRedirect(outputId) {
+            const outputElement = document.getElementById(outputId);
+            const originalConsoleLog = console.log;
+            const originalConsoleError = console.error;
+            
+            return function() {
+                // Reset output
+                outputElement.textContent = '';
+                
+                // Override console methods
+                console.log = function(message) {
+                    outputElement.textContent += message + '\n';
+                    originalConsoleLog.apply(console, arguments);
+                };
+                
+                console.error = function(message) {
+                    outputElement.textContent += '❌ ' + message + '\n';
+                    originalConsoleError.apply(console, arguments);
+                };
+                
+                // Return a cleanup function
+                return function() {
+                    console.log = originalConsoleLog;
+                    console.error = originalConsoleError;
+                };
+            };
+        }
+        
+        // Set up event listeners
+        document.getElementById('runAudioTests').addEventListener('click', function() {
+            const resetConsole = setupConsoleRedirect('audioTestOutput')();
+            
+            // Load and run the audio engine tests
+            const script = document.createElement('script');
+            script.src = 'audio-engine.test.js';
+            script.onload = function() {
+                // Tests will run automatically when the script loads
+                setTimeout(resetConsole, 1000); // Reset console after tests complete
+            };
+            document.head.appendChild(script);
+        });
+        
+        document.getElementById('runVisualizationTests').addEventListener('click', function() {
+            const resetConsole = setupConsoleRedirect('visualizationTestOutput')();
+            
+            // Load and run the visualization tests
+            const script = document.createElement('script');
+            script.src = 'visualization.test.js';
+            script.onload = function() {
+                // Tests will run automatically when the script loads
+                setTimeout(resetConsole, 1000); // Reset console after tests complete
+            };
+            document.head.appendChild(script);
+        });
+    </script>
+</body>
+</html>

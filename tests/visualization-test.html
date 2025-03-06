@@ -1,0 +1,336 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualization Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 5px;
+            overflow: auto;
+            max-height: 200px;
+        }
+        canvas {
+            display: block;
+            margin: 20px auto;
+            border: 1px solid #ccc;
+            background-color: #f8f8f8;
+        }
+    </style>
+</head>
+<body>
+    <h1>Visualization Test</h1>
+    
+    <div>
+        <button id="startButton">Start Animation</button>
+        <button id="stopButton">Stop Animation</button>
+        <button id="resetButton">Reset</button>
+    </div>
+    
+    <canvas id="testCanvas" width="600" height="600"></canvas>
+    
+    <h2>Log:</h2>
+    <pre id="log"></pre>
+    
+    <script>
+        // Simple logging function
+        function log(message) {
+            const logElement = document.getElementById('log');
+            const timestamp = new Date().toLocaleTimeString();
+            logElement.textContent = `[${timestamp}] ${message}\n` + logElement.textContent;
+        }
+        
+        // Visualization class
+        class TestVisualization {
+            constructor(canvasId) {
+                // Get the canvas element
+                this.canvas = document.getElementById(canvasId);
+                this.ctx = this.canvas.getContext('2d');
+                
+                // Visualization properties
+                this.centerX = this.canvas.width / 2;
+                this.centerY = this.canvas.height / 2;
+                this.maxRadius = Math.min(this.centerX, this.centerY) * 0.85;
+                this.playheadAngle = Math.PI / 2; // Start at top (90 degrees)
+                
+                // Animation properties
+                this.isAnimating = false;
+                this.animationFrameId = null;
+                this.startTime = null;
+                
+                // Voice data
+                this.voices = [
+                    { 
+                        note: "High A♭", 
+                        frequency: 830.61,
+                        loopDuration: 17.8,
+                        color: "#E57373" 
+                    },
+                    { 
+                        note: "C", 
+                        frequency: 523.25,
+                        loopDuration: 20.1, 
+                        color: "#FFB74D" 
+                    },
+                    { 
+                        note: "D♭", 
+                        frequency: 554.37,
+                        loopDuration: 31.8, 
+                        color: "#FFF176" 
+                    },
+                    { 
+                        note: "High F", 
+                        frequency: 698.46,
+                        loopDuration: 19.6, 
+                        color: "#AED581" 
+                    },
+                    { 
+                        note: "E♭", 
+                        frequency: 622.25,
+                        loopDuration: 16.2, 
+                        color: "#4FC3F7" 
+                    },
+                    { 
+                        note: "Low A♭", 
+                        frequency: 415.30,
+                        loopDuration: 21.3, 
+                        color: "#7986CB" 
+                    },
+                    { 
+                        note: "Low F", 
+                        frequency: 349.23,
+                        loopDuration: 24.7, 
+                        color: "#BA68C8" 
+                    }
+                ];
+                
+                // Dot properties
+                this.dotRadius = 8;
+                this.playheadWidth = 2;
+                
+                // Initialize
+                this.init();
+            }
+            
+            init() {
+                log('Initializing visualization...');
+                
+                // Calculate orbit radii based on loop durations
+                this.calculateOrbitRadii();
+                
+                // Initial draw
+                this.draw();
+                
+                log('Visualization initialized');
+            }
+            
+            calculateOrbitRadii() {
+                // Find the longest loop duration
+                const maxDuration = Math.max(...this.voices.map(voice => voice.loopDuration));
+                
+                // Calculate radius for each voice based on its loop duration
+                // Longer durations = larger orbits
+                this.voices.forEach(voice => {
+                    voice.orbitRadius = (voice.loopDuration / maxDuration) * this.maxRadius;
+                });
+                
+                log('Orbit radii calculated');
+            }
+            
+            draw() {
+                // Clear the canvas
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                // Draw background
+                this.drawBackground();
+                
+                // Draw orbits
+                this.drawOrbits();
+                
+                // Draw playhead
+                this.drawPlayhead();
+                
+                // Draw dots
+                this.drawDots();
+            }
+            
+            drawBackground() {
+                // Add a subtle gradient background
+                const gradient = this.ctx.createRadialGradient(
+                    this.centerX, this.centerY, 0,
+                    this.centerX, this.centerY, this.maxRadius * 1.5
+                );
+                gradient.addColorStop(0, '#f8f8f8');
+                gradient.addColorStop(1, '#f0f0f0');
+                
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(0, 0, this.canvas.width, this.canvas.height);
+            }
+            
+            drawOrbits() {
+                this.voices.forEach(voice => {
+                    this.ctx.beginPath();
+                    this.ctx.arc(this.centerX, this.centerY, voice.orbitRadius, 0, Math.PI * 2);
+                    this.ctx.strokeStyle = voice.color + '40'; // Add transparency
+                    this.ctx.lineWidth = 1;
+                    this.ctx.stroke();
+                });
+            }
+            
+            drawPlayhead() {
+                const endX = this.centerX + Math.cos(this.playheadAngle) * this.maxRadius * 1.1;
+                const endY = this.centerY + Math.sin(this.playheadAngle) * this.maxRadius * 1.1;
+                
+                this.ctx.beginPath();
+                this.ctx.moveTo(this.centerX, this.centerY);
+                this.ctx.lineTo(endX, endY);
+                this.ctx.strokeStyle = '#333';
+                this.ctx.lineWidth = this.playheadWidth;
+                this.ctx.stroke();
+            }
+            
+            drawDots() {
+                if (!this.isAnimating) {
+                    // If not animating, draw all dots at the playhead position
+                    this.voices.forEach(voice => {
+                        const dotX = this.centerX + Math.cos(this.playheadAngle) * voice.orbitRadius;
+                        const dotY = this.centerY + Math.sin(this.playheadAngle) * voice.orbitRadius;
+                        
+                        this.drawDot(dotX, dotY, voice.color);
+                    });
+                    return;
+                }
+                
+                // Get current time
+                const currentTime = (performance.now() - this.startTime) / 1000;
+                
+                // Draw each voice's dot
+                this.voices.forEach(voice => {
+                    // Calculate the dot's position based on current time and loop duration
+                    const loopPosition = (currentTime % voice.loopDuration) / voice.loopDuration;
+                    const angle = (loopPosition * Math.PI * 2) + this.playheadAngle;
+                    
+                    const dotX = this.centerX + Math.cos(angle) * voice.orbitRadius;
+                    const dotY = this.centerY + Math.sin(angle) * voice.orbitRadius;
+                    
+                    // Draw the dot
+                    this.drawDot(dotX, dotY, voice.color);
+                });
+            }
+            
+            drawDot(x, y, color) {
+                // Draw outer glow
+                const gradient = this.ctx.createRadialGradient(
+                    x, y, 0,
+                    x, y, this.dotRadius * 2
+                );
+                gradient.addColorStop(0, color);
+                gradient.addColorStop(0.5, color + '80'); // Semi-transparent
+                gradient.addColorStop(1, color + '00'); // Fully transparent
+                
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, this.dotRadius * 2, 0, Math.PI * 2);
+                this.ctx.fillStyle = gradient;
+                this.ctx.fill();
+                
+                // Draw dot
+                this.ctx.beginPath();
+                this.ctx.arc(x, y, this.dotRadius, 0, Math.PI * 2);
+                this.ctx.fillStyle = color;
+                this.ctx.fill();
+                
+                // Add highlight
+                this.ctx.beginPath();
+                this.ctx.arc(x - this.dotRadius * 0.3, y - this.dotRadius * 0.3, this.dotRadius * 0.4, 0, Math.PI * 2);
+                this.ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                this.ctx.fill();
+            }
+            
+            startAnimation() {
+                if (this.isAnimating) return;
+                
+                log('Starting animation...');
+                this.isAnimating = true;
+                this.startTime = performance.now();
+                
+                let frameCount = 0;
+                const animationStartTime = performance.now();
+                
+                const animate = () => {
+                    frameCount++;
+                    const currentTime = performance.now();
+                    
+                    // Log FPS every 60 frames
+                    if (frameCount % 60 === 0) {
+                        const elapsedSeconds = (currentTime - animationStartTime) / 1000;
+                        const fps = frameCount / elapsedSeconds;
+                        log(`Animation running at ${fps.toFixed(1)} FPS`);
+                    }
+                    
+                    this.draw();
+                    
+                    if (this.isAnimating) {
+                        this.animationFrameId = requestAnimationFrame(animate);
+                    }
+                };
+                
+                animate();
+            }
+            
+            stopAnimation() {
+                if (!this.isAnimating) return;
+                
+                log('Stopping animation...');
+                this.isAnimating = false;
+                
+                if (this.animationFrameId) {
+                    cancelAnimationFrame(this.animationFrameId);
+                    this.animationFrameId = null;
+                }
+                
+                // Draw one last frame to show the paused state
+                this.draw();
+            }
+            
+            reset() {
+                log('Resetting visualization...');
+                this.stopAnimation();
+                this.draw();
+            }
+        }
+        
+        // Create visualization instance
+        const visualization = new TestVisualization('testCanvas');
+        
+        // Add event listeners
+        document.getElementById('startButton').addEventListener('click', () => {
+            visualization.startAnimation();
+        });
+        
+        document.getElementById('stopButton').addEventListener('click', () => {
+            visualization.stopAnimation();
+        });
+        
+        document.getElementById('resetButton').addEventListener('click', () => {
+            visualization.reset();
+        });
+        
+        // Initial log
+        log('Visualization test page loaded');
+    </script>
+</body>
+</html>
