@@ -11,8 +11,7 @@ const ASSETS_TO_CACHE = [
   '/scripts/main.js',
   '/scripts/audio-engine.js',
   '/scripts/visualization.js',
-  '/scripts/ui-controls.js',
-  '/scripts/nosleep.min.js'
+  '/scripts/ui-controls.js'
   // Add any other assets that should be cached
 ];
 
