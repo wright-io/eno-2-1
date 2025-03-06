@@ -153,6 +153,15 @@ The visualization uses HTML5 Canvas to:
 └─ README.md            # This documentation
 ```
 
+### Mobile Support
+
+The application includes features specifically designed for mobile devices:
+
+- **MediaSession API Integration**: Enables background audio playback on mobile devices, allowing the music to continue playing when the screen is locked or the app is in the background. The implementation:
+  - Registers the application as a media player with the operating system
+  - Provides metadata about the currently playing music
+  - Handles media control events (play/pause) from the lock screen or notification area
+
 ## Browser Compatibility
 
 This application works best in modern browsers that support the Web Audio API, including:
@@ -161,6 +170,15 @@ This application works best in modern browsers that support the Web Audio API, i
 - Firefox 23+
 - Safari 6+
 - Edge 12+
+
+### Mobile Device Support
+
+The application includes special handling for mobile devices:
+
+- **Background Audio Playback**: The app uses the MediaSession API to enable background audio playback on iOS devices, allowing the music to continue playing even when the screen is locked or the app is in the background. This feature is supported in:
+  - Safari on iOS 15+
+  - Chrome on Android 57+
+  - Firefox on Android 82+
 
 ## Debugging
 
