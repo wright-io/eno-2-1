@@ -22,6 +22,8 @@ class UIControls {
         this.handleAudioLoaded = this.handleAudioLoaded.bind(this);
         this.handleNoteStart = this.handleNoteStart.bind(this);
         this.handleKeyDown = this.handleKeyDown.bind(this);
+        this.setupMediaSession = this.setupMediaSession.bind(this);
+        this.updateMediaSessionState = this.updateMediaSessionState.bind(this);
         
         // Initialize
         this.init();
@@ -46,15 +48,71 @@ class UIControls {
         document.addEventListener('keydown', this.handleKeyDown);
         
         // Connect audio engine events
-        audioEngine.onPlayStateChange = this.updatePlayPauseButton;
+        audioEngine.onPlayStateChange = (isPlaying) => {
+            this.updatePlayPauseButton(isPlaying);
+            this.updateMediaSessionState(isPlaying);
+        };
         audioEngine.onLoaded = this.handleAudioLoaded;
         audioEngine.onNoteStart = this.handleNoteStart;
+        
+        // Set up MediaSession API for background playback
+        this.setupMediaSession();
         
         // Initialize audio engine
         audioEngine.init().catch(error => {
             console.error('Failed to initialize audio engine:', error);
             this.showError('Failed to initialize audio. Please try refreshing the page.');
         });
+    }
+    
+    /**
+     * Set up the MediaSession API for background playback
+     * This allows the music to continue playing when the screen is locked on mobile devices
+     */
+    setupMediaSession() {
+        if ('mediaSession' in navigator) {
+            console.log('Setting up MediaSession API for background playback');
+            
+            // Set metadata for the currently playing media
+            navigator.mediaSession.metadata = new MediaMetadata({
+                title: 'Brian Eno\'s "2/1" Web Recreation',
+                artist: 'Music for Airports (1978)',
+                album: 'Ambient 1: Music for Airports',
+                artwork: [
+                    { src: '/favicon.ico', sizes: '16x16', type: 'image/x-icon' }
+                ]
+            });
+            
+            // Set up action handlers
+            navigator.mediaSession.setActionHandler('play', () => {
+                console.log('MediaSession play action triggered');
+                if (!audioEngine.isPlaying) {
+                    this.handlePlayPauseClick();
+                }
+            });
+            
+            navigator.mediaSession.setActionHandler('pause', () => {
+                console.log('MediaSession pause action triggered');
+                if (audioEngine.isPlaying) {
+                    this.handlePlayPauseClick();
+                }
+            });
+            
+            console.log('MediaSession API setup complete');
+        } else {
+            console.log('MediaSession API not available in this browser');
+        }
+    }
+    
+    /**
+     * Update the MediaSession playback state
+     * @param {boolean} isPlaying - Whether audio is playing
+     */
+    updateMediaSessionState(isPlaying) {
+        if ('mediaSession' in navigator) {
+            navigator.mediaSession.playbackState = isPlaying ? 'playing' : 'paused';
+            console.log(`Updated MediaSession playback state: ${isPlaying ? 'playing' : 'paused'}`);
+        }
     }
     
     /**
