@@ -29,7 +29,7 @@ To run the application locally:
 
 1. Clone this repository:
    ```
-   git clone https://github.com/yourusername/eno-2-1.git
+   git clone https://github.com/wright-io/eno-2-1.git
    cd eno-2-1
    ```
 
@@ -52,7 +52,21 @@ To run the application locally:
 
 ## Deployment
 
-### Deploying to Vercel
+### Live Demo
+
+Visit the live demo at: [https://wright-io.github.io/eno-2-1/](https://wright-io.github.io/eno-2-1/)
+
+### Deploying to GitHub Pages
+
+The project is set up to automatically deploy to GitHub Pages when changes are pushed to the main branch.
+
+1. The GitHub Actions workflow in `.github/workflows/deploy.yml` handles the deployment process.
+2. After pushing changes to the main branch, the site will be automatically deployed to GitHub Pages.
+3. You can check the status of the deployment in the "Actions" tab of your GitHub repository.
+
+### Alternative: Deploying to Vercel
+
+If you prefer to use Vercel:
 
 1. Install the Vercel CLI:
    ```
@@ -153,11 +167,31 @@ These test files can help identify whether issues are related to audio, visualiz
 ## Credits
 
 - Original Music: Brian Eno, "2/1" from Music for Airports (1978)
-- Implementation: [Your Name]
+- Implementation: David Wright (wright-io)
 
 ## License
 
-[Choose an appropriate license for your project]
+MIT License
+
+Copyright (c) 2025 David Wright
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.
 
 ## Acknowledgments
 
