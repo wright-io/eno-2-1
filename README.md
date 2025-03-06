@@ -157,6 +157,11 @@ The visualization uses HTML5 Canvas to:
 
 The application includes features specifically designed for mobile devices:
 
+- **Hybrid Audio Approach for iOS Background Playback**: Combines Web Audio API with HTML5 Audio elements to enable background audio playback on iOS devices:
+  - Uses a silent, looping HTML5 Audio element to keep the iOS audio session alive
+  - Synchronizes the silent audio with the Web Audio API playback
+  - Ensures audio continues even when the screen is locked or the app is in the background
+
 - **MediaSession API Integration**: Enables background audio playback on mobile devices, allowing the music to continue playing when the screen is locked or the app is in the background. The implementation:
   - Registers the application as a media player with the operating system
   - Provides metadata about the currently playing music
@@ -175,7 +180,12 @@ This application works best in modern browsers that support the Web Audio API, i
 
 The application includes special handling for mobile devices:
 
-- **Background Audio Playback**: The app uses the MediaSession API to enable background audio playback on iOS devices, allowing the music to continue playing even when the screen is locked or the app is in the background. This feature is supported in:
+- **Background Audio Playback**: The app uses a hybrid approach combining the MediaSession API with a silent HTML5 Audio element to enable background audio playback on iOS devices, allowing the music to continue playing even when the screen is locked or the app is in the background. This implementation:
+  - Overcomes iOS's automatic suspension of Web Audio API contexts when the screen locks
+  - Maintains the audio session using a silent, looping HTML5 Audio element
+  - Provides media controls on the lock screen via the MediaSession API
+
+  This feature is supported in:
   - Safari on iOS 15+
   - Chrome on Android 57+
   - Firefox on Android 82+
