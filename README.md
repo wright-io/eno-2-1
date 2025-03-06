@@ -197,13 +197,13 @@ These test files can help identify whether issues are related to audio, visualiz
 ## Credits
 
 - Original Music: Brian Eno, "2/1" from Music for Airports (1978)
-- Implementation: David Wright (wright-io)
+- Implementation: Doug Wright (wright-io)
 
 ## License
 
 MIT License
 
-Copyright (c) 2025 David Wright
+Copyright (c) 2025 Doug Wright
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
