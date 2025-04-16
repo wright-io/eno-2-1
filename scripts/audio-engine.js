@@ -98,6 +98,13 @@ class AudioEngine {
         this.onPlayStateChange = null;
         this.onNoteStart = null;
         this.onLoaded = null;
+        // Binaural beats state and nodes
+        this.binauralEnabled = false;
+        this.binauralGain = null;
+        this.binauralLeftOsc = null;
+        this.binauralRightOsc = null;
+        this.binauralLeftPanner = null;
+        this.binauralRightPanner = null;
     }
 
     /**
@@ -113,6 +120,10 @@ class AudioEngine {
             this.masterGain = this.audioContext.createGain();
             this.masterGain.gain.value = 0.7;
             this.masterGain.connect(this.audioContext.destination);
+            // Setup binaural beats gain node (initially silent)
+            this.binauralGain = this.audioContext.createGain();
+            this.binauralGain.gain.value = 0;
+            this.binauralGain.connect(this.masterGain);
             
             // Load piano sample
             await this.loadPianoSample();
@@ -662,6 +673,71 @@ class AudioEngine {
         }
         
         return this.voices;
+    }
+    /**
+     * Enable or disable binaural beats
+     * @param {boolean} enabled - true to enable binaural beats, false to disable
+     */
+    setBinauralBeats(enabled) {
+        if (enabled) {
+            this.enableBinauralBeats();
+        } else {
+            this.disableBinauralBeats();
+        }
+    }
+
+    /**
+     * Start binaural beat oscillators
+     */
+    enableBinauralBeats() {
+        if (this.binauralEnabled || !this.audioContext) return;
+        const carrierFreq = 200;
+        const beatFreq = 7;
+        const leftFreq = carrierFreq + beatFreq / 2;
+        const rightFreq = carrierFreq - beatFreq / 2;
+        this.binauralLeftOsc = this.audioContext.createOscillator();
+        this.binauralRightOsc = this.audioContext.createOscillator();
+        this.binauralLeftOsc.type = 'sine';
+        this.binauralRightOsc.type = 'sine';
+        this.binauralLeftOsc.frequency.value = leftFreq;
+        this.binauralRightOsc.frequency.value = rightFreq;
+        this.binauralLeftPanner = this.audioContext.createStereoPanner();
+        this.binauralRightPanner = this.audioContext.createStereoPanner();
+        this.binauralLeftPanner.pan.value = -1;
+        this.binauralRightPanner.pan.value = 1;
+        this.binauralLeftOsc.connect(this.binauralLeftPanner).connect(this.binauralGain);
+        this.binauralRightOsc.connect(this.binauralRightPanner).connect(this.binauralGain);
+        this.binauralGain.gain.setValueAtTime(0.1, this.audioContext.currentTime);
+        this.binauralLeftOsc.start();
+        this.binauralRightOsc.start();
+        this.binauralEnabled = true;
+    }
+
+    /**
+     * Stop binaural beat oscillators
+     */
+    disableBinauralBeats() {
+        if (!this.binauralEnabled) return;
+        this.binauralGain.gain.setValueAtTime(0, this.audioContext.currentTime);
+        if (this.binauralLeftOsc) {
+            try { this.binauralLeftOsc.stop(); } catch {}
+            this.binauralLeftOsc.disconnect();
+            this.binauralLeftOsc = null;
+        }
+        if (this.binauralRightOsc) {
+            try { this.binauralRightOsc.stop(); } catch {}
+            this.binauralRightOsc.disconnect();
+            this.binauralRightOsc = null;
+        }
+        if (this.binauralLeftPanner) {
+            this.binauralLeftPanner.disconnect();
+            this.binauralLeftPanner = null;
+        }
+        if (this.binauralRightPanner) {
+            this.binauralRightPanner.disconnect();
+            this.binauralRightPanner = null;
+        }
+        this.binauralEnabled = false;
     }
 }
 
