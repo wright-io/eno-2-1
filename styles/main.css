@@ -118,6 +118,15 @@ main {
     width: 100%;
     max-width: min(800px, 90vw); /* Match visualization container width */
 }
+/* Binaural Beats toggle styling */
+.binaural-control {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    color: #333;
+}
 
 .play-pause-btn, .regenerate-btn {
     width: 48px;

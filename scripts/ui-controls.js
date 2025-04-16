@@ -29,6 +29,9 @@ class UIControls {
         this.setupMediaSession = this.setupMediaSession.bind(this);
         this.updateMediaSessionState = this.updateMediaSessionState.bind(this);
         this.initSilentAudio = this.initSilentAudio.bind(this);
+        // Binaural beats toggle element and handler
+        this.binauralCheckbox = document.getElementById('binauralToggle');
+        this.handleBinauralToggle = this.handleBinauralToggle.bind(this);
         
         // Initialize
         this.init();
@@ -47,6 +50,10 @@ class UIControls {
         // Add event listeners for buttons
         this.playPauseButton.addEventListener('click', this.handlePlayPauseClick);
         this.regenerateButton.addEventListener('click', this.handleRegenerateClick);
+        // Add event listener for binaural beats toggle
+        if (this.binauralCheckbox) {
+            this.binauralCheckbox.addEventListener('change', this.handleBinauralToggle);
+        }
         
         // Add keyboard event listener for space bar to control play/pause
         this.handleKeyDown = this.handleKeyDown.bind(this);
@@ -56,6 +63,11 @@ class UIControls {
         audioEngine.onPlayStateChange = (isPlaying) => {
             this.updatePlayPauseButton(isPlaying);
             this.updateMediaSessionState(isPlaying);
+            if (this.binauralCheckbox && this.binauralCheckbox.checked) {
+                audioEngine.setBinauralBeats(isPlaying);
+            } else {
+                audioEngine.setBinauralBeats(false);
+            }
         };
         audioEngine.onLoaded = this.handleAudioLoaded;
         audioEngine.onNoteStart = this.handleNoteStart;
@@ -480,6 +492,18 @@ class UIControls {
         // Pass the event to visualization
         if (visualization) {
             visualization.onNoteStart(voiceIndex, time);
+        }
+    }
+    /**
+     * Handle binaural beats toggle change event
+     * @param {Event} event - The change event on the binaural beats checkbox
+     */
+    handleBinauralToggle(event) {
+        const enabled = event.target.checked;
+        if (enabled && audioEngine.isPlaying) {
+            audioEngine.setBinauralBeats(true);
+        } else {
+            audioEngine.setBinauralBeats(false);
         }
     }
     
